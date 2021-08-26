@@ -16,6 +16,7 @@
 import copy
 import json
 import logging
+import uuid
 import os
 from urllib.parse import unquote_plus
 from distutils.util import strtobool
@@ -106,7 +107,7 @@ def verify_s3_object_version(s3, s3_object):
 
 
 def get_local_path(s3_object, local_prefix):
-    return os.path.join(local_prefix, s3_object.bucket_name, s3_object.key)
+    return os.path.join(local_prefix, s3_object.bucket_name, str(uuid.uuid4()), s3_object.key)
 
 
 def delete_s3_object(s3_object):
@@ -230,16 +231,19 @@ def lambda_handler(event, context):
     create_dir(os.path.dirname(file_path))
     s3_object.download_file(file_path)
 
-    to_download = clamav.update_defs_from_s3(
-        s3_client, AV_DEFINITION_S3_BUCKET, AV_DEFINITION_S3_PREFIX
-    )
+    if os.path.isdir(AV_DEFINITION_PATH):
+        logging.info("Definition files already exist, will use existing files.")
+    else:
+        to_download = clamav.update_defs_from_s3(
+            s3_client, AV_DEFINITION_S3_BUCKET, AV_DEFINITION_S3_PREFIX
+        )
 
-    for download in to_download.values():
-        s3_path = download["s3_path"]
-        local_path = download["local_path"]
-        logging.debug("Downloading definition file %s from s3://%s" % (local_path, s3_path))
-        s3.Bucket(AV_DEFINITION_S3_BUCKET).download_file(s3_path, local_path)
-        logging.debug("Downloading definition file %s complete!" % (local_path))
+        for download in to_download.values():
+            s3_path = download["s3_path"]
+            local_path = download["local_path"]
+            logging.info("Downloading definition file %s from s3://%s" % (local_path, s3_path))
+            s3.Bucket(AV_DEFINITION_S3_BUCKET).download_file(s3_path, local_path)
+            logging.info("Downloading definition file %s complete!" % (local_path))
 
     scan_result, scan_signature = clamav.scan_file(file_path)
     logging.info(
