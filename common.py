@@ -23,6 +23,8 @@ import shutil
 
 logging.getLogger().setLevel(level=os.getenv("LOG_LEVEL", logging.INFO))
 
+EFS_USE_FOR_DEFINITIONS = True if os.getenv("EFS_USE_FOR_DEFINITIONS") == "true" else False
+EFS_SCAN_FILE_PATH = os.getenv("EFS_SCAN_FILE_PATH", "/tmp")
 
 AV_DEFINITION_S3_BUCKET = os.getenv("AV_DEFINITION_S3_BUCKET")
 AV_DEFINITION_S3_PREFIX = os.getenv("AV_DEFINITION_S3_PREFIX", "clamav_defs")
