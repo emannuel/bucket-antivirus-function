@@ -17,6 +17,7 @@ import copy
 import json
 import logging
 import uuid
+import subprocess
 import os
 from urllib.parse import unquote_plus
 from distutils.util import strtobool
@@ -47,7 +48,27 @@ from common import create_dir
 from common import get_timestamp
 
 
-logging.getLogger().setLevel(level=os.getenv("LOG_LEVEL", logging.INFO))
+def start_clamd():
+    s3 = boto3.resource("s3", endpoint_url=S3_ENDPOINT)
+    s3_client = boto3.client("s3", endpoint_url=S3_ENDPOINT)
+
+    to_download = clamav.update_defs_from_s3(
+        s3_client, AV_DEFINITION_S3_BUCKET, AV_DEFINITION_S3_PREFIX
+    )
+
+    for download in to_download.values():
+        s3_path = download["s3_path"]
+        local_path = download["local_path"]
+        logging.info("Downloading definition file %s from s3://%s" % (local_path, s3_path))
+        s3.Bucket(AV_DEFINITION_S3_BUCKET).download_file(s3_path, local_path)
+        logging.info("Downloading definition file %s complete!" % (local_path))
+
+    logging.info("Starting clamav daemon")
+    return_code = subprocess.call("/var/task/sbin/clamd -c /var/task/etc/clamd.conf")
+    logging.info("Started clamav daemon with return_code %s" % (return_code))
+
+# Download definition files on starting the lambda, at AWS' expense
+start_clamd()
 
 def event_object(event, event_source="s3"):
 
