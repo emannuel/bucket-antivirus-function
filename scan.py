@@ -65,7 +65,7 @@ def start_clamd():
 
     logging.info("Starting clamav daemon")
     return_code = subprocess.call("/var/task/sbin/clamd -c /var/task/etc/clamd.conf")
-    logging.info("Started clamav daemon with return_code %s" % (return_code))
+    logging.info("Started clamav daemon with return_code %s." % (return_code))
 
 # Download definition files on starting the lambda, at AWS' expense
 start_clamd()
