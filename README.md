@@ -7,6 +7,7 @@ This is a fork that:
 * uses an uptodate version of clamav
 * allows setting a log level through environment variables
 * allows to pass in an EFS mount via the environment variable EFS_SCAN_FILE_PATH which greatly enhances lambda container reuse
+* Use clamdscan to greatly enhance scan performance (about 25 seconds down to less than 1 second for a small file)
 
 [![CircleCI](https://circleci.com/gh/upsidetravel/bucket-antivirus-function.svg?style=svg)](https://circleci.com/gh/upsidetravel/bucket-antivirus-function)
 

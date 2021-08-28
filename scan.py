@@ -16,8 +16,9 @@
 import copy
 import json
 import logging
-import uuid
 import os
+import subprocess
+import uuid
 from urllib.parse import unquote_plus
 from distutils.util import strtobool
 
@@ -40,14 +41,38 @@ from common import AV_STATUS_SNS_ARN
 from common import AV_STATUS_SNS_PUBLISH_CLEAN
 from common import AV_STATUS_SNS_PUBLISH_INFECTED
 from common import AV_TIMESTAMP_METADATA
+from common import CLAMD_SOCKET
+from common import CLAMD_PATH
+from common import CLAMD_CONFIG_PATH
 from common import EFS_SCAN_FILE_PATH
 from common import SNS_ENDPOINT
 from common import S3_ENDPOINT
+
 from common import create_dir
 from common import get_timestamp
 
 
 logging.getLogger().setLevel(level=os.getenv("LOG_LEVEL", logging.INFO))
+
+
+def start_clamd(s3, s3_client):
+    if not os.path.isdir(AV_DEFINITION_PATH):
+        to_download = clamav.update_defs_from_s3(
+            s3_client, AV_DEFINITION_S3_BUCKET, AV_DEFINITION_S3_PREFIX
+        )
+
+        for download in to_download.values():
+            s3_path = download["s3_path"]
+            local_path = download["local_path"]
+            logging.info("Downloading definition file %s from s3://%s" % (local_path, s3_path))
+            s3.Bucket(AV_DEFINITION_S3_BUCKET).download_file(s3_path, local_path)
+            logging.info("Downloading definition file %s complete!" % (local_path))
+
+    if not os.path.exists(CLAMD_SOCKET):
+        logging.info("Starting clamav daemon")
+        return_code = subprocess.call(f"{CLAMD_PATH} -c {CLAMD_CONFIG_PATH}", shell=True)
+        logging.info("Started clamav daemon with return_code %s." % (return_code))
+
 
 def event_object(event, event_source="s3"):
 
@@ -211,6 +236,8 @@ def lambda_handler(event, context):
     s3_client = boto3.client("s3", endpoint_url=S3_ENDPOINT)
     sns_client = boto3.client("sns", endpoint_url=SNS_ENDPOINT)
 
+    start_clamd(s3, s3_client)
+
     # Get some environment variables
     ENV = os.getenv("ENV", "")
     EVENT_SOURCE = os.getenv("EVENT_SOURCE", "S3")
@@ -231,24 +258,11 @@ def lambda_handler(event, context):
     create_dir(os.path.dirname(file_path))
     s3_object.download_file(file_path)
 
-    if os.path.isdir(AV_DEFINITION_PATH):
-        logging.info("Definition files already exist, will use existing files.")
-    else:
-        to_download = clamav.update_defs_from_s3(
-            s3_client, AV_DEFINITION_S3_BUCKET, AV_DEFINITION_S3_PREFIX
-        )
-
-        for download in to_download.values():
-            s3_path = download["s3_path"]
-            local_path = download["local_path"]
-            logging.debug("Downloading definition file %s from s3://%s" % (local_path, s3_path))
-            s3.Bucket(AV_DEFINITION_S3_BUCKET).download_file(s3_path, local_path)
-            logging.debug("Downloading definition file %s complete!" % (local_path))
-        scan_result, scan_signature = clamav.scan_file(file_path)
-        logging.info(
-            "Scan of s3://%s resulted in %s\n"
-            % (os.path.join(s3_object.bucket_name, s3_object.key), scan_result)
-        )
+    scan_result, scan_signature = clamav.scan_file(file_path)
+    logging.info(
+        "Scan of s3://%s resulted in %s\n"
+        % (os.path.join(s3_object.bucket_name, s3_object.key), scan_result)
+    )
 
     result_time = get_timestamp()
     # Set the properties on the object with the scan results
