@@ -26,12 +26,16 @@ RUN rm -rf /root/.cache/pip
 # Fix the freshclam.conf settings
 RUN echo "DatabaseMirror database.clamav.net" > /var/task/bin/freshclam.conf
 RUN echo "CompressLocalDatabase yes" >> /var/task/bin/freshclam.conf
+RUN echo "DatabaseDirectory /tmp/clamav_defs" > /var/task/etc/clamd.conf
+RUN echo "PidFile /tmp/clamd.pid" >> /var/task/etc/clamd.conf
+RUN echo "LocalSocket /tmp/clamd.sock" >> /var/task/etc/clamd.conf
+RUN echo "LogFile /tmp/clamd.log" >> /var/task/etc/clamd.conf
 
 # Copy Python code into lambda
 COPY ./*.py /var/task/
 
 # Create the zip file
-RUN zip -r9 --exclude="*test*" /lambda.zip *.py bin
+RUN zip -r9 --exclude="*test*" /lambda.zip *.py bin sbin etc
 
 WORKDIR /usr/local/lib/python3.8/site-packages
 RUN zip -r9 /lambda.zip *

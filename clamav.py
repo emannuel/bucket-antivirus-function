@@ -33,7 +33,8 @@ from common import AV_SIGNATURE_UNKNOWN
 from common import AV_STATUS_CLEAN
 from common import AV_STATUS_INFECTED
 from common import CLAMAVLIB_PATH
-from common import CLAMSCAN_PATH
+from common import CLAMDSCAN_PATH
+from common import CLAMD_CONFIG_PATH
 from common import FRESHCLAM_PATH
 from common import create_dir
 
@@ -175,13 +176,13 @@ def scan_file(path):
     av_env["LD_LIBRARY_PATH"] = CLAMAVLIB_PATH
     logging.info("Starting clamscan of %s." % path)
     av_proc = subprocess.Popen(
-        [CLAMSCAN_PATH, "-v", "-a", "--stdout", "-d", AV_DEFINITION_PATH, path],
+        [CLAMDSCAN_PATH, "-v", "--stdout", "--config-file", CLAMD_CONFIG_PATH, path],
         stderr=subprocess.STDOUT,
         stdout=subprocess.PIPE,
         env=av_env,
     )
     output = av_proc.communicate()[0].decode()
-    logging.info("clamscan output:\n%s" % output)
+    logging.info("clamdscan output:\n%s" % output)
 
     # Turn the output into a data source we can read
     summary = scan_output_to_json(output)
@@ -191,6 +192,6 @@ def scan_file(path):
         signature = summary.get(path, AV_SIGNATURE_UNKNOWN)
         return AV_STATUS_INFECTED, signature
     else:
-        msg = "Unexpected exit code from clamscan: %s.\n" % av_proc.returncode
+        msg = "Unexpected exit code from clamdscan: %s.\n" % av_proc.returncode
         logging.info(msg)
         raise Exception(msg)
