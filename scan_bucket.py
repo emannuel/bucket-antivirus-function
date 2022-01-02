@@ -29,6 +29,7 @@ from common import S3_ENDPOINT
 
 logging.getLogger().setLevel(level=os.getenv("LOG_LEVEL", logging.INFO))
 
+
 # Get all objects in an S3 bucket that have not been previously scanned
 def get_objects(s3_client, s3_bucket_name):
 

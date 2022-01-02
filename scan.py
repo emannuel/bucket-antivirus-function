@@ -29,7 +29,6 @@ import clamav
 from common import AV_DEFINITION_PATH
 from common import AV_DEFINITION_S3_BUCKET
 from common import AV_DEFINITION_S3_PREFIX
-from common import AV_DELETE_INFECTED_FILES
 from common import AV_PROCESS_ORIGINAL_VERSION_ONLY
 from common import AV_SCAN_START_METADATA
 from common import AV_SCAN_START_SNS_ARN
@@ -53,7 +52,6 @@ from common import get_timestamp
 
 
 logging.getLogger().setLevel(level=os.getenv("LOG_LEVEL", logging.INFO))
-
 
 
 def start_clamd(s3, s3_client):
@@ -240,7 +238,6 @@ def lambda_handler(event, context):
     start_clamd(s3, s3_client)
 
     # Get some environment variables
-    ENV = os.getenv("ENV", "")
     EVENT_SOURCE = os.getenv("EVENT_SOURCE", "S3")
 
     start_time = get_timestamp()

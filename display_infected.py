@@ -32,6 +32,7 @@ from common import AV_STATUS_INFECTED
 
 logging.getLogger().setLevel(level=os.getenv("LOG_LEVEL", logging.INFO))
 
+
 # Get all objects in an S3 bucket that are infected
 def get_objects_and_sigs(s3_client, s3_bucket_name):
 

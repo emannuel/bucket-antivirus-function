@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import errno
 import datetime
 import os
 import os.path
@@ -49,7 +48,6 @@ EFS_SCAN_FILE_PATH = os.getenv("EFS_SCAN_FILE_PATH", "/tmp")
 AV_PROCESS_ORIGINAL_VERSION_ONLY = os.getenv(
     "AV_PROCESS_ORIGINAL_VERSION_ONLY", "False"
 )
-AV_DELETE_INFECTED_FILES = os.getenv("AV_DELETE_INFECTED_FILES", "False")
 
 AV_DEFINITION_FILE_PREFIXES = ["main", "daily", "bytecode"]
 AV_DEFINITION_FILE_SUFFIXES = ["cld", "cvd"]

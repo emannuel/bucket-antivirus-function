@@ -22,11 +22,11 @@ import clamav
 from common import AV_DEFINITION_PATH
 from common import AV_DEFINITION_S3_BUCKET
 from common import AV_DEFINITION_S3_PREFIX
-from common import CLAMAVLIB_PATH
 from common import S3_ENDPOINT
 from common import get_timestamp
 
 logging.getLogger().setLevel(level=os.getenv("LOG_LEVEL", logging.INFO))
+
 
 def lambda_handler(event, context):
     s3 = boto3.resource("s3", endpoint_url=S3_ENDPOINT)
