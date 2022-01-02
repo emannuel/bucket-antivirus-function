@@ -35,7 +35,6 @@ extracted and the files inside scanned also
 - The objects tags are updated to reflect the result of the scan, CLEAN
 or INFECTED, along with the date and time of the scan.
 - Object metadata is updated to reflect the result of the scan (optional)
-- Metrics are sent to [DataDog](https://www.datadoghq.com/) (optional)
 - Scan results are published to a SNS topic (optional) (Optionally choose to only publish INFECTED results)
 - Files found to be INFECTED are automatically deleted (optional)
 
@@ -108,7 +107,6 @@ the table below for reference.
 | CLAMAVLIB_PATH | Path to ClamAV library files | ./bin | No |
 | CLAMSCAN_PATH | Path to ClamAV clamscan binary | ./bin/clamscan | No |
 | FRESHCLAM_PATH | Path to ClamAV freshclam binary | ./bin/freshclam | No |
-| DATADOG_API_KEY | API Key for pushing metrics to DataDog (optional) | | No |
 | AV_PROCESS_ORIGINAL_VERSION_ONLY | Controls that only original version of an S3 key is processed (if bucket versioning is enabled) | False | No |
 | AV_DELETE_INFECTED_FILES | Controls whether infected files should be automatically deleted | False | No |
 | EVENT_SOURCE | The source of antivirus scan event "S3" or "SNS" (optional) | S3 | No |

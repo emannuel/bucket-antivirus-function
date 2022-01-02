@@ -26,7 +26,6 @@ from distutils.util import strtobool
 import boto3
 
 import clamav
-import metrics
 from common import AV_DEFINITION_PATH
 from common import AV_DEFINITION_S3_BUCKET
 from common import AV_DEFINITION_S3_PREFIX
@@ -283,10 +282,6 @@ def lambda_handler(event, context):
                 scan_signature,
                 result_time,
             )
-
-        metrics.send(
-            env=ENV, bucket=s3_object.bucket_name, key=s3_object.key, status=scan_result
-        )
 
     stop_scan_time = get_timestamp()
     logging.debug("Script finished at %s\n" % stop_scan_time)
