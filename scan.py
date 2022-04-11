@@ -252,7 +252,7 @@ def lambda_handler(event, context):
         start_scan_time = get_timestamp()
         sns_start_scan(sns_client, s3_object, AV_SCAN_START_SNS_ARN, start_scan_time)
 
-    with tempfile.TemporaryDirectory(prefix=EFS_SCAN_FILE_PATH) as tmpdirname:
+    with tempfile.TemporaryDirectory(dir=EFS_SCAN_FILE_PATH) as tmpdirname:
         file_path = get_local_path(s3_object, tmpdirname)
         create_dir(os.path.dirname(file_path))
         s3_object.download_file(file_path)

@@ -11,11 +11,34 @@ RUN yum install -y cpio yum-utils zip unzip less libcurl-devel binutils openssl 
 
 # Set up working directories
 RUN mkdir -p /var/task/bin/
+RUN mkdir -p /var/task/sbin/
+RUN mkdir -p /var/task/etc/
+RUN mkdir -p /var/task/lib/
 
-RUN wget https://github.com/curl/curl/releases/download/curl-7_76_1/curl-7.76.1.tar.bz2 && tar xvfj curl-7.76.1.tar.bz2
-RUN pushd curl-7.76.1 && ./configure --prefix=/var/task --disable-shared && make install && popd
-RUN wget https://www.clamav.net/downloads/production/clamav-${clamav_version}.tar.gz && tar xvfz clamav-${clamav_version}.tar.gz
-RUN pushd clamav-${clamav_version} && ./configure --enable-static=yes --enable-shared=no --disable-unrar --with-libcurl=/var/task/ --prefix=/var/task && make install && popd
+RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+
+WORKDIR /tmp
+#clamav-devel
+RUN yumdownloader -x \*i686 --archlist=x86_64 clamav clamav-lib clamav-update clamav-server clamav-data clamav-filesystem json-c pcre2 libprelude gnutls libtasn1 lib64nettle nettle
+RUN rpm2cpio clamav-0*.rpm | cpio -idmv
+RUN rpm2cpio clamav-lib*.rpm | cpio -vimd
+RUN rpm2cpio clamav-update*.rpm | cpio -idmv
+RUN rpm2cpio clamd*.rpm | cpio -idmv
+RUN rpm2cpio clamav-filesystem*.rpm | cpio -idmv
+#RUN rpm2cpio clamav-devel*.rpm | cpio -idmv
+RUN rpm2cpio clamav-data*.rpm | cpio -idmv
+RUN rpm2cpio json-c*.rpm | cpio -idmv
+RUN rpm2cpio pcre*.rpm | cpio -idmv
+RUN rpm2cpio gnutls* | cpio -idmv
+RUN rpm2cpio nettle* | cpio -idmv
+RUN rpm2cpio lib* | cpio -idmv
+RUN rpm2cpio *.rpm | cpio -idmv
+RUN rpm2cpio libtasn1* | cpio -idmv
+
+# Copy over the binaries and libraries
+RUN cp /tmp/usr/bin/clamscan /tmp/usr/bin/freshclam /tmp/usr/bin/clamdscan /var/task/bin/
+RUN cp /tmp/usr/lib64/* /var/task/lib/
+RUN cp /tmp/usr/sbin/* /var/task/sbin/
 
 # This had --no-cache-dir, tracing through multiple tickets led to a problem in wheel
 WORKDIR /var/task
@@ -35,7 +58,7 @@ RUN echo "LogFile /tmp/clamd.log" >> /var/task/etc/clamd.conf
 COPY ./*.py /var/task/
 
 # Create the zip file
-RUN zip -r9 --exclude="*test*" /lambda.zip *.py bin sbin etc
+RUN zip -r9 --exclude="*test*" /lambda.zip *.py bin sbin etc lib
 
 WORKDIR /usr/local/lib/python3.8/site-packages
 RUN zip -r9 /lambda.zip *

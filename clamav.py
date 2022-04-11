@@ -98,15 +98,16 @@ def upload_defs_to_s3(s3_client, bucket, prefix, local_path):
 
 def update_defs_from_freshclam(path):
     create_dir(path)
-    logging.info("Starting freshclam with defs in %s." % path)
+    command = [
+        FRESHCLAM_PATH,
+        "--config-file=./bin/freshclam.conf",
+        "-u %s" % pwd.getpwuid(os.getuid())[0],
+        "--verbose",
+        "--datadir=%s" % path,
+        ]
+    logging.info("Starting freshclam with defs in %s." % command)
     fc_proc = subprocess.Popen(
-        [
-            FRESHCLAM_PATH,
-            "--config-file=./bin/freshclam.conf",
-            "-u %s" % pwd.getpwuid(os.getuid())[0],
-            "--verbose",
-            "--datadir=%s" % path,
-        ],
+        command,
         stderr=subprocess.STDOUT,
         stdout=subprocess.PIPE,
     )
@@ -171,6 +172,24 @@ def scan_file(path):
     av_env = os.environ.copy()
     av_env["LD_LIBRARY_PATH"] = CLAMAVLIB_PATH
     logging.info("Starting clamscan of %s." % path)
+
+
+    pwd_log = subprocess.Popen(
+        "pwd",
+        stderr=subprocess.STDOUT,
+        stdout=subprocess.PIPE,
+        env=av_env,
+    )
+    whoami_log = subprocess.Popen(
+        "whoami",
+        stderr=subprocess.STDOUT,
+        stdout=subprocess.PIPE,
+        env=av_env,
+    )
+
+    logging.info("Whoami %s." % whoami_log.communicate()[0].decode(errors="ignore"))
+    logging.info("pwd %s." % pwd_log.communicate()[0].decode(errors="ignore"))
+
     av_proc = subprocess.Popen(
         [CLAMDSCAN_PATH, "-v", "--stdout", "--config-file", CLAMD_CONFIG_PATH, path],
         stderr=subprocess.STDOUT,
